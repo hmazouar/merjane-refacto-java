@@ -3,12 +3,14 @@ package com.nimbleways.springboilerplate.domain.service.processor;
 import com.nimbleways.springboilerplate.domain.port.outbound.NotificationPort;
 import com.nimbleways.springboilerplate.domain.port.outbound.ProductRepositoryPort;
 import com.nimbleways.springboilerplate.entities.Product;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDate;
 
+@Slf4j
 @Component
 public class ExpirableProductProcessor implements ProductProcessor {
 
@@ -39,9 +41,13 @@ public class ExpirableProductProcessor implements ProductProcessor {
     public void process(Product product) {
         LocalDate now = LocalDate.now(clock);
         if (product.getAvailable() > 0 && product.getExpiryDate() != null && product.getExpiryDate().isAfter(now)) {
+            log.info("Decreasing stock for expirable product '{}' (new stock: {}, expires: {})",
+                    product.getName(), product.getAvailable() - 1, product.getExpiryDate());
             product.setAvailable(product.getAvailable() - 1);
             productRepositoryPort.save(product);
         } else {
+            log.info("Expirable product '{}' is expired or out of stock (expires: {}). Setting stock to 0 and notifying expiration.",
+                    product.getName(), product.getExpiryDate());
             notificationPort.sendExpirationNotification(product.getName(), product.getExpiryDate());
             product.setAvailable(0);
             productRepositoryPort.save(product);

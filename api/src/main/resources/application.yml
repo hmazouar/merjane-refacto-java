@@ -1,17 +1,23 @@
 spring:
+  application:
+    name: merjane-api
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:merjane_db}}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgres}}
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 2
 
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
-      hibernate.format_sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
+      hibernate.format_sql: false
 
   liquibase:
     enabled: false
@@ -20,24 +26,39 @@ springdoc:
   api-docs:
     enabled: ${ENABLE_SWAGGER:true}
 
-logging:
-  level:
-    root: INFO
-
 server:
-  port: 8080
+  port: ${PORT:8080}
+  shutdown: graceful
   servlet:
     context-path: /api
 
 management:
   endpoints:
-    enabled-by-default: false
     web:
       exposure:
-        include: "*"
+        include: "health,info,prometheus,metrics"
   endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+    metrics:
+      enabled: true
     info:
       enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
   info:
     defaults:
       enabled: false
@@ -46,3 +67,8 @@ management:
       mode: "full"
     java:
       enabled: true
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.nimbleways.springboilerplate: ${LOG_LEVEL_APP:DEBUG}

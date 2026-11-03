@@ -1,5 +1,6 @@
 package com.nimbleways.springboilerplate.domain.service;
 
+import com.nimbleways.springboilerplate.domain.port.outbound.OrderMetricsPort;
 import com.nimbleways.springboilerplate.domain.port.outbound.OrderRepositoryPort;
 import com.nimbleways.springboilerplate.domain.service.processor.ProductProcessor;
 import com.nimbleways.springboilerplate.dto.product.ProcessOrderResponse;
@@ -34,11 +35,14 @@ public class ProcessOrderServiceUnitTest {
     @Mock
     private ProductProcessor processor2;
 
+    @Mock
+    private OrderMetricsPort orderMetricsPort;
+
     private ProcessOrderService processOrderService;
 
     @BeforeEach
     void setUp() {
-        processOrderService = new ProcessOrderService(orderRepositoryPort, List.of(processor1, processor2));
+        processOrderService = new ProcessOrderService(orderRepositoryPort, List.of(processor1, processor2), orderMetricsPort);
     }
 
     @Test
@@ -62,6 +66,9 @@ public class ProcessOrderServiceUnitTest {
         assertEquals(orderId, response.id());
         verify(processor1).process(productA);
         verify(processor2).process(productB);
+        verify(orderMetricsPort).recordOrderProcessed("SUCCESS");
+        verify(orderMetricsPort).recordProductProcessed("TYPE_A");
+        verify(orderMetricsPort).recordProductProcessed("TYPE_B");
     }
 
     @Test
@@ -72,6 +79,7 @@ public class ProcessOrderServiceUnitTest {
 
         // WHEN / THEN
         assertThrows(OrderNotFoundException.class, () -> processOrderService.processOrder(orderId));
+        verify(orderMetricsPort).recordOrderProcessed("NOT_FOUND");
     }
 
     @Test
@@ -103,6 +111,7 @@ public class ProcessOrderServiceUnitTest {
         assertNotNull(response);
         assertEquals(orderId, response.id());
         verifyNoInteractions(processor1, processor2);
+        verify(orderMetricsPort).recordOrderProcessed("SUCCESS");
     }
 
     @Test
@@ -116,5 +125,16 @@ public class ProcessOrderServiceUnitTest {
 
         // WHEN / THEN
         assertThrows(IllegalArgumentException.class, () -> processOrderService.processOrder(orderId));
+    }
+
+    @Test
+    void constructorWithoutMetricsPort_usesNoopPort() {
+        ProcessOrderService serviceWithoutMetrics = new ProcessOrderService(orderRepositoryPort, List.of(processor1));
+        Long orderId = 104L;
+        Order order = new Order(orderId, null);
+        when(orderRepositoryPort.findById(orderId)).thenReturn(Optional.of(order));
+
+        ProcessOrderResponse response = serviceWithoutMetrics.processOrder(orderId);
+        assertNotNull(response);
     }
 }
