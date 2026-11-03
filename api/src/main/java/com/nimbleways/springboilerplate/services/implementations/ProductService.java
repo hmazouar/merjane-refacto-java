@@ -8,14 +8,14 @@ import org.springframework.stereotype.Service;
 import com.nimbleways.springboilerplate.entities.Product;
 import com.nimbleways.springboilerplate.repositories.ProductRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
-    @Autowired
-    ProductRepository pr;
-
-    @Autowired
-    NotificationService ns;
+    private final ProductRepository pr;
+    private final NotificationService ns;
 
     public void notifyDelay(int leadTime, Product p) {
         p.setLeadTime(leadTime);

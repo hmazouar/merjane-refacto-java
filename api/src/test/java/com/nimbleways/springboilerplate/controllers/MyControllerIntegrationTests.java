@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 // import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,6 +55,30 @@ public class MyControllerIntegrationTests {
                                 .andExpect(status().isOk());
                 Order resultOrder = orderRepository.findById(order.getId()).get();
                 assertEquals(resultOrder.getId(), order.getId());
+
+                // Assert notifications
+                org.mockito.Mockito.verify(notificationService).sendDelayNotification(10, "USB Dongle");
+                org.mockito.Mockito.verify(notificationService).sendExpirationNotification(org.mockito.ArgumentMatchers.eq("Milk"), org.mockito.ArgumentMatchers.any());
+                org.mockito.Mockito.verify(notificationService).sendOutOfStockNotification("Grapes");
+
+                // Assert product stock updates
+                Product usbCable = productRepository.findFirstByName("USB Cable").orElseThrow();
+                assertEquals(Integer.valueOf(29), usbCable.getAvailable());
+
+                Product usbDongle = productRepository.findFirstByName("USB Dongle").orElseThrow();
+                assertEquals(Integer.valueOf(0), usbDongle.getAvailable());
+
+                Product butter = productRepository.findFirstByName("Butter").orElseThrow();
+                assertEquals(Integer.valueOf(29), butter.getAvailable());
+
+                Product milk = productRepository.findFirstByName("Milk").orElseThrow();
+                assertEquals(Integer.valueOf(0), milk.getAvailable());
+
+                Product watermelon = productRepository.findFirstByName("Watermelon").orElseThrow();
+                assertEquals(Integer.valueOf(29), watermelon.getAvailable());
+
+                Product grapes = productRepository.findFirstByName("Grapes").orElseThrow();
+                assertEquals(Integer.valueOf(30), grapes.getAvailable());
         }
 
         private static Order createOrder(Set<Product> products) {

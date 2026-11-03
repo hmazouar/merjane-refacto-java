@@ -16,7 +16,7 @@
 		<java.version>17</java.version>
 		<spring-security.version>5.6.9</spring-security.version>
 		<org.mapstruct.version>1.4.2.Final</org.mapstruct.version>
-		<org.projectlombok.version>1.18.20</org.projectlombok.version>
+		<org.projectlombok.version>1.18.34</org.projectlombok.version>
 		<org.liquibase.version>4.17.2</org.liquibase.version>
 		<org.owasp.dependency-check-maven.version>7.1.1</org.owasp.dependency-check-maven.version>
 		<org.owasp.dependency-check-maven.suppressionFile>dependency-check-suppressions.xml</org.owasp.dependency-check-maven.suppressionFile>
@@ -303,8 +303,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
+					<release>${java.version}</release>
 					<showWarnings>true</showWarnings>
 					<compilerArgs>
 						<arg>-Werror</arg>
@@ -427,6 +426,8 @@
 				<artifactId>git-commit-id-plugin</artifactId>
 				<configuration>
 					<offline>true</offline>
+					<dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
+					<failOnNoGitDirectory>false</failOnNoGitDirectory>
 					<dateFormat>yyyy-MM-dd'T'HH:mm:ssX</dateFormat>
 					<dateFormatTimeZone>UTC</dateFormatTimeZone>
 					<excludeProperties>
@@ -437,6 +438,38 @@
 						<excludeProperty>git.build.user.email</excludeProperty>
 						<excludeProperty>git.build.user.name</excludeProperty>
 					</excludeProperties>
+				</configuration>
+			</plugin>
+			<!-- PITEST (Mutation Testing) -->
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>1.9.11</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>1.1.2</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<targetClasses>
+						<param>com.nimbleways.springboilerplate.domain.*</param>
+						<param>com.nimbleways.springboilerplate.infrastructure.*</param>
+						<param>com.nimbleways.springboilerplate.services.*</param>
+					</targetClasses>
+					<targetTests>
+						<param>com.nimbleways.springboilerplate.*Test*</param>
+						<param>com.nimbleways.springboilerplate.*UnitTest*</param>
+					</targetTests>
+					<excludedTestClasses>
+						<param>**.*IntegrationTests</param>
+					</excludedTestClasses>
+					<outputFormats>
+						<outputFormat>HTML</outputFormat>
+						<outputFormat>XML</outputFormat>
+					</outputFormats>
+					<timestampedReports>false</timestampedReports>
 				</configuration>
 			</plugin>
 		</plugins>
