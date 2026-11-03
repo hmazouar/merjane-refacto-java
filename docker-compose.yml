@@ -45,16 +45,5 @@ services:
       retries: 3
       start_period: 30s
 
-  prometheus:
-    image: prom/prometheus:v2.45.0
-    container_name: merjane-prometheus
-    restart: unless-stopped
-    depends_on:
-      - api
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
 volumes:
   postgres_data:

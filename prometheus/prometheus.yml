@@ -1,9 +1,0 @@
-global:
-  scrape_interval: 5s
-  evaluation_interval: 5s
-
-scrape_configs:
-  - job_name: 'merjane-api'
-    metrics_path: '/api/actuator/prometheus'
-    static_configs:
-      - targets: ['api:8080']
